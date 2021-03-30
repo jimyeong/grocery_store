@@ -1,0 +1,11 @@
+{{#if csrfToken}}
+    <form action="/signup" method="post">
+        <h3>user sign-up</h3>
+        <input type="text" name="name" value="https://gilbut.co.kr">
+        <input type="submit" value="button">
+        <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    </form>
+    <img src="http://localhost:5000/signup/hacking" alt="">
+{{else}}
+    <p>wrong request</p>
+{{/if}}
