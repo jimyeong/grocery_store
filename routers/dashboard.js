@@ -3,7 +3,9 @@ const router = express.Router();
 
 
 router.get("/", (req,res)=>{
-    res.render("views/pages/dashboard");
+    console.log("session: " + JSON.stringify(req.session));
+
+    res.render("pages/dashboard");
 })
 
 

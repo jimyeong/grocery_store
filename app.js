@@ -8,14 +8,26 @@ const path = require("path");
 const session = require("express-session");
 const exphbs = require("express-handlebars");
 const _hanadlebars = require("handlebars");
-const dotenv = require("dotenv");
 const {allowInsecurePrototypeAccess} = require("@handlebars/allow-prototype-access"); // 이거 실제로 사용가능한 모듈인지 확인해볼것
 const logger = require("./helpers/logger");
 const flash = require("connect-flash");
 const {sequelize} = require("./models");
+const redis = require("redis");
+const keys = require("./config/keys");
+
+const dotenv = require("dotenv");
+dotenv.config()
+
+
+//redis storage setting
+let RedisStore = require("connect-redis")(session);
+let redisClient = redis.createClient(keys.REDIS_PORT);
+
+
+
 
 const passport = require("passport");
-require("./config/passport")(passport);
+require("./config/passport")(passport, redisClient);
 
 // router
 const signupRouter = require("./routers/signup");
@@ -24,8 +36,7 @@ const oauthRouter = require("./routers/oauth");
 const dashboardRouter = require("./routers/dashboard");
 
 
-// process.ENV 객체에 .env 파일에 적힌 key, value 로 값 넣어줌
-dotenv.config()
+
 
 // view template setting
 const hbs = exphbs.create({
@@ -38,7 +49,7 @@ app.engine("handlebars", hbs.engine);
 app.use(express.static(path.join(__dirname, "/public")));
 
 // bodyparser set up
-app.use(cookieParser(process.env.COOKIE_SECRET));
+app.use(cookieParser(keys.COOKIE_SECRET));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use(flash());
@@ -47,11 +58,12 @@ app.use(flash());
 // 나중에 .env 파일에서 꺼내준다.
 app.use(session({
     // properties 특징 다시 한번 찾아보기, 기억 안남..
-    secret: process.env.COOKIE_SECRET,
+    store:new RedisStore({client: redisClient}),
+    secret: keys.COOKIE_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie:{
-        maxAge: 1000*60*60
+        maxAge: 60*60
     }
 }));
 
@@ -67,15 +79,33 @@ if (process.env.NODE_ENV === "production"){
 }
 
 // db connection
-sequelize.sync({force:false})
+sequelize.sync({force:true})
     .then(()=>{
         console.log(`DB is connected successfully`)
     }).catch(err=>{
         console.log(err);
 })
 
+// 세션이 없는 경우, 로그인페이지로
+/*
+app.use(function(req,res,next){
+    if(!req.session){
+        res.redirect("/users/login");
+    }
+});
+*/
+
+
 app.get("/", (req,res)=>{
-    res.redirect("/users/login");
+    if(req.session){
+        res.redirect("/users/login");
+    }else {
+        console.log("@@@@@", req.session);
+        res.redirect("/dashboard");
+
+
+    }
+
 })
 
 
@@ -90,7 +120,6 @@ app.use("/dashboard", dashboardRouter);
 app.use((req,res,next)=>{
     const error = new Error(`${req.method} ${req.url} No Router there` );
     error.status = 404;
-
     // 에러가 나오면 로그를 기록해준다.
     logger.info("hello"); // level 이 info로 로그가 전달된다
     logger.error(error.message); // level 이 에러로 로그가 찍힌다.

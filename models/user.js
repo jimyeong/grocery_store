@@ -4,11 +4,18 @@ module.exports = class User extends Sequelize.Model{
     static  FK_USER_WORKER = "fk_user_worker_id";
     static init(sequelize){
         return super.init({
+            email:{
+                type:Sequelize.STRING(50),
+                allowNull: true
+            },
+            name: {
+                type: Sequelize.STRING(20),
+                allowNull: false
+            },
             grade: {
                 type: Sequelize.TINYINT(1),
                 defaultValue: 1
             },
-
             miledge :{
                 type: Sequelize.INTEGER(9),
                 defaultValue: 0
@@ -17,6 +24,10 @@ module.exports = class User extends Sequelize.Model{
             point: {
                 type: Sequelize.INTEGER,
                 defaultValue: 0
+            },
+            profile_image:{
+                type: Sequelize.INTEGER(20),
+                allowNull: true
             },
             created_at:{
                 type: Sequelize.DATE,

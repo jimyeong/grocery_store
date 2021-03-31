@@ -1,12 +1,12 @@
 require("dotenv").config();
-
+const keys = require("./keys");
 module.exports = {
     development: {
-        username: process.env.SEQUELIZE_DEV_USERNAME,
-        password: process.env.SEQUELIZE_DEV_PASSWORD,
-        database: process.env.SEQUELIZE_DEV_DB,
-        host: process.env.SEQUELIZE_DEV_HOST,
-        dialect: process.env.SEQUELIZE_DEV_DIALECT
+        username: keys.DB_USERNAME,
+        password: keys.DB_PASSWORD,
+        database: keys.DB_NAME,
+        host: keys.DB_HOST,
+        dialect: keys.DB
     },
     test: {
         username: "root",
@@ -16,11 +16,11 @@ module.exports = {
         dialect: "mysql"
     },
     production: {
-        username: process.env.SEQUELIZE_USERNAME,
-        password: process.env.SEQUELIZE_PASSWORD,
-        database: process.env.SEQUELIZE_DEV_DB,
-        host: process.env.SEQUELIZE_HOST,
-        dialect: process.env.SEQUELIZE_DIALECT
+        username: keys.DB_USERNAME,
+        password: keys.DB_PASSWORD,
+        database: keys.DB_NAME,
+        host: keys.DB_HOST,
+        dialect: keys.DB
     }
 }
 
