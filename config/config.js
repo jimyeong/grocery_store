@@ -2,11 +2,11 @@ require("dotenv").config();
 
 module.exports = {
     development: {
-        username: "root",
-        password: null,
-        database: "mysql",
-        host: "127.0.0.1",
-        dialect: "mysql"
+        username: process.env.SEQUELIZE_DEV_USERNAME,
+        password: process.env.SEQUELIZE_DEV_PASSWORD,
+        database: process.env.SEQUELIZE_DEV_DB,
+        host: process.env.SEQUELIZE_DEV_HOST,
+        dialect: process.env.SEQUELIZE_DEV_DIALECT
     },
     test: {
         username: "root",
@@ -18,7 +18,7 @@ module.exports = {
     production: {
         username: process.env.SEQUELIZE_USERNAME,
         password: process.env.SEQUELIZE_PASSWORD,
-        database: process.env.SEQUELIZE_DATABASE,
+        database: process.env.SEQUELIZE_DEV_DB,
         host: process.env.SEQUELIZE_HOST,
         dialect: process.env.SEQUELIZE_DIALECT
     }

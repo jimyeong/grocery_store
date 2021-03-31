@@ -12,6 +12,7 @@ const dotenv = require("dotenv");
 const {allowInsecurePrototypeAccess} = require("@handlebars/allow-prototype-access"); // 이거 실제로 사용가능한 모듈인지 확인해볼것
 const logger = require("./helpers/logger");
 const flash = require("connect-flash");
+const {sequelize} = require("./models");
 
 const passport = require("passport");
 require("./config/passport")(passport);
@@ -64,6 +65,14 @@ if (process.env.NODE_ENV === "production"){
 }else{
     app.use(morgan('dev'));
 }
+
+// db connection
+sequelize.sync({force:false})
+    .then(()=>{
+        console.log(`DB is connected successfully`)
+    }).catch(err=>{
+        console.log(err);
+})
 
 app.get("/", (req,res)=>{
     res.redirect("/users/login");
