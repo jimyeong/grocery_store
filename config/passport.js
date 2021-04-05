@@ -24,18 +24,33 @@ module.exports = function (passport, redisclient) {
             //done(null, user)
             //done(null, false,{mesg: ""}) // 넘겨운 정보가 부정확해서, 로그인이 안된경우, 왜 안됬는지는, 3번쨰 파라미터로 알려준다. // 일반적인 케이스다
             //done(err) // 서버에러로 실패한 경우
+            console.log(profile);
+
             const newUser = {
                 id: profile._json.id,
-                email: profile._json.email,
-                name: profile.username
+                email: profile._json.kakao_account.email,
+                name: profile.username,
+                thumbnail_img: profile._json.properties.profile_image,
+                connected_at: profile._json.connected_at
             };
 
+            done(null, newUser);
+            redisclient.hmset(newUser.email, newUser, (err, res)=>{
+                console.log(err);
+                console.log(res);
+                // expire 데이트 설정
+            });
+
+
+
+
+            /*
             User.findOne({
                 where: {email: newUser.email}
             }).then(user => {
 
                 //redis 저장
-                redisclient.set(user.email, user);
+                redisclient.hset(user.email, user);
                 done(null, user.email);
 
             }).catch(err => {
@@ -45,7 +60,7 @@ module.exports = function (passport, redisclient) {
                 // 여기서 에러남
                 redisclient.set(newUser.email, newUser);
                 done(null, newUser.email);
-            })
+            })*/
         }
     ))
 
@@ -57,13 +72,13 @@ module.exports = function (passport, redisclient) {
     passport.deserializeUser(function (email, done) {
         done(null, email)
 
-        //레디스에서 꺼내오기
+        /*//레디스에서 꺼내오기
         redisclient.get(email, (err, user)=>{
             if(err)done(err)
             if(user){
                 done(null, user);
             }
-        })
+        })*/
         /*
         User.findOne({
             where:{id}

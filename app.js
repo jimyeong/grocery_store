@@ -14,6 +14,7 @@ const flash = require("connect-flash");
 const {sequelize} = require("./models");
 const redis = require("redis");
 const keys = require("./config/keys");
+const {redisConfig} = require("./config/redis_config");
 
 const dotenv = require("dotenv");
 dotenv.config()
@@ -21,9 +22,7 @@ dotenv.config()
 
 //redis storage setting
 let RedisStore = require("connect-redis")(session);
-let redisClient = redis.createClient(keys.REDIS_PORT);
-
-
+let redisClient = redis.createClient(keys.REDIS_PORT, keys.REDIS_HOST, redisConfig);
 
 
 const passport = require("passport");
@@ -34,8 +33,6 @@ const signupRouter = require("./routers/signup");
 const usersRouter = require("./routers/users");
 const oauthRouter = require("./routers/oauth");
 const dashboardRouter = require("./routers/dashboard");
-
-
 
 
 // view template setting
@@ -55,15 +52,15 @@ app.use(bodyParser.json());
 app.use(flash());
 
 
+
 // 나중에 .env 파일에서 꺼내준다.
 app.use(session({
-    // properties 특징 다시 한번 찾아보기, 기억 안남..
-    store:new RedisStore({client: redisClient}),
+    store: new RedisStore({client: redisClient, ttl: keys.SESSION_MAXAGE}),
     secret: keys.COOKIE_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie:{
-        maxAge: 60*60
+    cookie: {
+        maxAge: keys.SESSION_MAXAGE*60
     }
 }));
 
@@ -72,18 +69,18 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // terminal 에서 로그를 찍어준다.
-if (process.env.NODE_ENV === "production"){
+if (process.env.NODE_ENV === "production") {
     app.use(morgan('combined'))
-}else{
+} else {
     app.use(morgan('dev'));
 }
 
 // db connection
-sequelize.sync({force:true})
-    .then(()=>{
+sequelize.sync({force: true})
+    .then(() => {
         console.log(`DB is connected successfully`)
-    }).catch(err=>{
-        console.log(err);
+    }).catch(err => {
+    console.log(err);
 })
 
 // 세션이 없는 경우, 로그인페이지로
@@ -95,17 +92,14 @@ app.use(function(req,res,next){
 });
 */
 
+app.get("/", (req, res) => {
+    if (req.user == null) {
 
-app.get("/", (req,res)=>{
-    if(req.session){
+        console.log(req.user)
         res.redirect("/users/login");
-    }else {
-        console.log("@@@@@", req.session);
+    } else {
         res.redirect("/dashboard");
-
-
     }
-
 })
 
 
@@ -117,8 +111,8 @@ app.use("/dashboard", dashboardRouter);
 
 
 // 404 page && error page
-app.use((req,res,next)=>{
-    const error = new Error(`${req.method} ${req.url} No Router there` );
+app.use((req, res, next) => {
+    const error = new Error(`${req.method} ${req.url} No Router there`);
     error.status = 404;
     // 에러가 나오면 로그를 기록해준다.
     logger.info("hello"); // level 이 info로 로그가 전달된다
@@ -127,7 +121,7 @@ app.use((req,res,next)=>{
 })
 
 // error 페이지를 그려준다.
-app.use((err, req,res,next)=>{
+app.use((err, req, res, next) => {
     res.locals.message = err.message;
     // production 일떄는 에러 숨긴다.
     res.locals.error = process.env.NODE_ENV !== "production" ? err : {};
@@ -135,7 +129,7 @@ app.use((err, req,res,next)=>{
     res.render("error", err);
 })
 
-app.listen(port, ()=>{
-	console.log(`server is running on port ${port}`)
+app.listen(port, () => {
+    console.log(`server is running on port ${port}`)
 })
 
